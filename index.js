@@ -4,6 +4,8 @@ const mysql = require("mysql");
 const session = require("express-session");
 const mySQlStore = require("express-mysql-session")(session);
 var taskController = require("./app/task/taskController");
+const passport = require("passport");
+const LocalStrategy = require("passport-local").Strategy;
 const flash = require("connect-flash");
 
 const app = express();
@@ -38,6 +40,12 @@ const sessionStore = new mySQlStore(
   connectionPool
 );
 
+app.use(passport.initialize());
+// replaces session id in request object with user data pulled from deserialize user
+app.use(passport.session());
+// enable flash message systm
+app.use(flash());
+
 /******************** ROUTES *******************/
 
 // displays app home page
@@ -48,14 +56,14 @@ app.get("/", (req, res, next) => {
 app.get("/login", (req, res, next) => {
   let flashError = req.flash("error");
   let flashMessage = req.flash("message");
-  res.render("login.ejs", {
+  res.render("public/login.ejs", {
     flashError: flashError,
     flashMessage: flashMessage,
   });
-})
+});
 // displays register page
-app.get('/register', (req, res, next) => {
-    res.sendFile(__dirname + '/public/register.html');
+app.get("/register", (req, res, next) => {
+  res.sendFile(__dirname + "/public/register.html");
 });
 // app listens on the port
 app.listen(process.env.PORT);
