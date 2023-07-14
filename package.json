@@ -9,14 +9,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Jisan10667/To-do-App.git"
+    "url": ""
   },
   "author": "Jisan Ahmed",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/Jisan10667/To-do-App/issues"
+    "url": ""
   },
-  "homepage": "https://github.com/Jisan10667/To-do-App#readme",
+  "homepage": "",
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "connect-flash": "^0.1.1",
