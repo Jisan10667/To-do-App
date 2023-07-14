@@ -1,0 +1,36 @@
+{
+  "name": "to-do-app",
+  "version": "1.0.0",
+  "description": "This is a part of out webtech project ",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Jisan10667/To-do-App.git"
+  },
+  "author": "Jisan Ahmed",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Jisan10667/To-do-App/issues"
+  },
+  "homepage": "https://github.com/Jisan10667/To-do-App#readme",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "connect-flash": "^0.1.1",
+    "cookie-parser": "^1.4.6",
+    "dotenv": "^16.3.1",
+    "ejs": "^3.1.9",
+    "express": "^4.18.2",
+    "express-mysql-session": "^3.0.0",
+    "express-session": "^1.17.3",
+    "jsonwebtoken": "^9.0.1",
+    "mysql": "^2.18.1",
+    "passport": "^0.6.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}
