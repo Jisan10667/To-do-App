@@ -2,6 +2,8 @@ require("dotenv").config();
 const express = require("express");
 const mysql = require("mysql");
 const session = require("express-session");
+const mySQlStore = require("express-mysql-session")(session);
+
 
 const app = express();
 app.use(express.json());
@@ -14,6 +16,10 @@ app.use(
 // set view engine to ejs, allows us to use ejs in the public folder
 app.set("views", __dirname + "/public");
 app.set("view engine", "ejs");
+
+//include middleware for serving static files (css/images folder and error pages folder)
+app.use(express.static(__dirname + '/public/views'));
+app.use(express.static(__dirname + '/public/error-pages'));
 
 var connectionPool = mysql.createPool({
   connectionLimit: 300,
@@ -28,7 +34,12 @@ const sessionStore = new mySQlStore({
     createDatabaseTable: false
 }, connectionPool);
 
+/******************** ROUTES *******************/
 
+// displays app home page
+app.get('/', (req, res, next) => {
+    res.sendFile(__dirname + '/public/index.html');
+})
 
 // app listens on the port
 app.listen(process.env.PORT);

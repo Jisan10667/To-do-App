@@ -19,6 +19,7 @@
   "homepage": "https://github.com/Jisan10667/To-do-App#readme",
   "dependencies": {
     "bcryptjs": "^2.4.3",
+    "connect-flash": "^0.1.1",
     "cookie-parser": "^1.4.6",
     "dotenv": "^16.3.1",
     "ejs": "^3.1.9",
@@ -26,7 +27,8 @@
     "express-mysql-session": "^3.0.0",
     "express-session": "^1.17.3",
     "jsonwebtoken": "^9.0.1",
-    "mysql": "^2.18.1"
+    "mysql": "^2.18.1",
+    "passport": "^0.6.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
