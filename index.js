@@ -52,6 +52,10 @@ app.get("/login", (req, res, next) => {
     flashError: flashError,
     flashMessage: flashMessage,
   });
+})
+// displays register page
+app.get('/register', (req, res, next) => {
+    res.sendFile(__dirname + '/public/register.html');
 });
 // app listens on the port
 app.listen(process.env.PORT);
