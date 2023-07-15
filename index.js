@@ -1,3 +1,7 @@
+/*************** INITIALIZATION *******************/
+
+// required all necessary dependencies
+
 require("dotenv").config();
 const express = require("express");
 const mysql = require("mysql");
@@ -7,7 +11,9 @@ var taskController = require("./app/task/taskController");
 const passport = require("passport");
 const LocalStrategy = require("passport-local").Strategy;
 const flash = require("connect-flash");
+const bcrypt = require("bcryptjs");
 
+// initiate Express server and include middleware
 const app = express();
 app.use(express.json());
 app.use(
@@ -24,8 +30,9 @@ app.use(express.static(__dirname + "/public/error-pages"));
 app.set("views", __dirname + "/public");
 app.set("view engine", "ejs");
 
+// declare connection pool to MySQL database
 var connectionPool = mysql.createPool({
-  connectionLimit: 300,
+  //connectionLimit: 300,
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
@@ -40,6 +47,8 @@ const sessionStore = new mySQlStore(
   connectionPool
 );
 
+/******************** FUNCTIONS *********************/
+// registers a user in the database and gives them default settings
 function register(username, password, confirmPassword) {
   return new Promise((resolve, reject) => {
     if (password != confirmPassword) {
@@ -76,6 +85,7 @@ function register(username, password, confirmPassword) {
   });
 }
 
+// check if a user already exists in the database
 function userExists(username) {
   return new Promise((resolve, reject) => {
     findUser(username)
@@ -91,29 +101,31 @@ function userExists(username) {
       });
   });
 }
-// retrieves user data by username, returns empty array if user does not exist 
-function findUser(username) {
-    return new Promise((resolve, reject) => {
-        connectionPool.getConnection((err, connection) => {
-            if (err) {
-                connection.release();
-                reject(new Error(err.message));
-            }
-            else {
-                connection.query("SELECT * FROM users WHERE USERNAME=?", username, function(error, results, fields) {
-            
-                    if (error) {
-                        reject(new Error(error.message));
-                    }
-                    else {
-                        resolve(results);
-                    }
 
-                    connection.release();
-                });
+// retrieves user data by username, returns empty array if user does not exist
+function findUser(username) {
+  return new Promise((resolve, reject) => {
+    connectionPool.getConnection((err, connection) => {
+      if (err) {
+        connection.release();
+        reject(new Error(err.message));
+      } else {
+        connection.query(
+          "SELECT * FROM users WHERE USERNAME=?",
+          username,
+          function (error, results, fields) {
+            if (error) {
+              reject(new Error(error.message));
+            } else {
+              resolve(results);
             }
-        });
+
+            connection.release();
+          }
+        );
+      }
     });
+  });
 }
 // inserts a user into the database
 function insertUser(username, password) {
@@ -153,6 +165,72 @@ function insertUser(username, password) {
   });
 }
 
+// generates a random salt to hash a user password, returns the salt and the hashed password
+async function genPassword(password) {
+  let salt = await bcrypt.genSalt();
+  let hash = await bycrypt.hash(password, salt);
+  return {
+    salt: salt,
+    hash:hash,
+  }
+}
+
+// verifies the login credentials of a user
+function verifyUser(username, password, callback) {
+    findUser(username)
+        .then((response) => {
+            if (response.length === 0) {
+                return callback(null, false, {
+                    message: "Incorrect username or password.",
+                });
+            } else {
+                verifyPassword(password, response[0].SALT, response[0].HASH)
+                    .then((verified) => {
+                        if (verified) {
+                            const user = {
+                                id: response[0].ID,
+                                username: response[0].USERNAME,
+                                hash: response[0].HASH,
+                                salt: response[0].SALT,
+                            };
+
+                            return callback(null, user);
+                        } else {
+                            return callback(null, false, {
+                                message: "Incorrect username or password.",
+                            });
+                        }
+                    })
+                    .catch((error) => {
+                        return callback(error);
+                    });
+            }
+        })
+        .catch((error) => {
+            return callback(error);
+        });
+}
+
+// compares the hash stored in the database to the hash generated with the user-entered password
+async function verifyPassword(password, salt, hash) {
+  const hashVerify = await bcrypt.hash(password, salt);
+  return hash === hashVerify;
+}
+
+// middleware that checks if the user session is authenticated, sends a 401 unauthorized error and its error page if not
+function isAuth(req, res, next) {
+  if (req.isAuthenticated()) {
+    next();
+  } else {
+    req.flash(
+      "error",
+      "You are not currently logged in. Please login first to access and edit your lists."
+    );
+    return res
+      .status(401)
+      .sendFile(__dirname + "/public/error-pages/not-authorized.html");
+  }
+}
 /************** MIDDLEWARE *********************/
 // stores session data into the database
 app.use(
@@ -180,6 +258,11 @@ app.use(flash());
 app.get("/", (req, res, next) => {
   res.sendFile(__dirname + "/public/index.html");
 });
+
+// displays register page
+app.get("/register", (req, res, next) => {
+  res.sendFile(__dirname + "/public/register.html");
+});
 // renders login page
 app.get("/login", (req, res, next) => {
   let flashError = req.flash("error");
@@ -189,10 +272,7 @@ app.get("/login", (req, res, next) => {
     flashMessage: flashMessage,
   });
 });
-// displays register page
-app.get("/register", (req, res, next) => {
-  res.sendFile(__dirname + "/public/register.html");
-});
+
 // middleware to catch all other undefined routes, sends a 404 not found error and its error page
 app.use((req, res, next) => {
   res.status(404).sendFile(__dirname + "/public/error-pages/not-found.html");
