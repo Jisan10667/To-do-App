@@ -231,6 +231,26 @@ function isAuth(req, res, next) {
       .sendFile(__dirname + "/public/error-pages/not-authorized.html");
   }
 }
+
+/***************** PASSPORT.JS *************************/
+
+// use the verifyUser function as a LocalStrategy for Passport.js authentication
+const strategy = new LocalStrategy(verifyUser);
+passport.use(strategy);
+
+// serialize user into browser's session
+passport.serializeUser((user, callback) => {
+  process.nextTick(() => {
+    return callback(null, { id: user.id, username: user.username });
+  });
+});
+
+// retrieve user from browser's session
+passport.deserializeUser((user, callback) => {
+    process.nextTick(() => {
+        return callback(null, user);
+    });
+});
 /************** MIDDLEWARE *********************/
 // stores session data into the database
 app.use(
