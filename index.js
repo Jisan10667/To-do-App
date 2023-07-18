@@ -415,6 +415,67 @@ function deleteList(list_id) {
     });
 }
 
+// updates the status of a To-Do checkbox (done or not?)
+function updateToDoCheckbox(todo_id, is_done) {
+    return new Promise((resolve, reject) => {
+        connectionPool.getConnection((err, connection) => {
+            if (err) {
+                connection.release();
+                reject(new Error(err.message));
+            }
+            else {
+                connection.query('UPDATE todos SET IS_DONE=? WHERE ID=?', [is_done, todo_id], function(error, results, fields) {
+                    if (error) {
+                        reject(new Error(error.message));
+                    }
+                    else {
+                        resolve({
+                            body: {
+                                message: "ToDo checkbox successfully updated.",
+                                id: todo_id
+                            }
+                        });
+                    }
+
+                    connection.release();
+                });
+            }
+        });
+        
+    });
+}
+
+function updateListTitle(list_id, newTitle) {
+  return new Promise((resolve, reject) => {
+    connectionPool.getConnection((err, connection) => {
+      if (err) {
+        connection.release();
+        reject(new Error(err.message));
+      } else {
+        connection.query(
+          "UPDATE lists SET NAME=? WHERE ID=?",
+          [newTitle, list_id],
+          function (error, results, fields) {
+            if (error) {
+              reject(new Error(error.message));
+            } else {
+              resolve({
+                body: {
+                  message: "List title successfully updated.",
+                  id: list_id,
+                },
+              });
+            }
+
+            connection.release();
+          }
+        );
+      }
+    });
+  });
+}
+
+
 /***************** PASSPORT.JS *************************/
 
 // use the verifyUser function as a LocalStrategy for Passport.js authentication
