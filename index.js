@@ -531,11 +531,12 @@ app.get("/register", (req, res, next) => {
 app.get("/login", (req, res, next) => {
   let flashError = req.flash("error");
   let flashMessage = req.flash("message");
-  res.render("public/login.ejs", {
+  res.render("login.ejs", {
     flashError: flashError,
     flashMessage: flashMessage,
   });
 });
+
 
 // renders user landing page (protected route)
 app.get('/landing', isAuth, (req, res, next) => {
@@ -556,6 +557,35 @@ app.get('/logout', (req, res, next) => {
         res.redirect('/login');
     });
 });
+
+// endpoint to login, redirects to /landing on success, else redirects to /login with a flash error message on failure
+app.post(
+  "/login",
+  passport.authenticate("local", {
+    failureRedirect: "/login",
+    failureFlash: true,
+    successRedirect: "/landing",
+  })
+);
+// registers a user
+app.post("/register", (req, res) => {
+  register(req.body.username, req.body.password, req.body.confirmPassword)
+    .then((response) => {
+      return res.send({
+        success: true,
+        body: response.body,
+      });
+    })
+    .catch((error) => {
+      return res.send({
+        success: false,
+        body: {
+          message: error.message,
+        },
+      });
+    });
+});
+
 
 // middleware to catch all other undefined routes, sends a 404 not found error and its error page
 app.use((req, res, next) => {
