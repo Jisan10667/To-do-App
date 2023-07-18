@@ -586,6 +586,39 @@ app.post("/register", (req, res) => {
     });
 });
 
+// adds a To-Do to the database (protected route)
+app.post('/addToDo', isAuth, (req, res) => {
+    addToDo(req.body.task, req.body.list_id).then((response) => {
+        return res.send({
+            success: true,
+            body: response.body
+        })
+    }).catch((error) => {
+        return res.send({
+            success: false,
+            body: {
+                message: error.message
+            }
+        })
+    });
+});
+// adds a list to the database (protected route)
+app.post('/addList', isAuth, (req, res) => {
+    addList(req.body.name, req.user.id).then((response) => {
+        return res.send({
+            success: true,
+            body: response.body
+        });
+    }).catch((error) => {
+        return res.send({
+            success: false,
+            body: {
+                message: error.message
+            }
+        });
+    });
+});
+
 
 // middleware to catch all other undefined routes, sends a 404 not found error and its error page
 app.use((req, res, next) => {
