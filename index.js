@@ -705,6 +705,42 @@ app.post('/removeToDo', isAuth, (req, res) => {
     });
 });
 
+// updates the status of a To-Do checkbox (protected route)
+app.post("/updateToDoCheckbox", isAuth, (req, res) => {
+  updateToDoCheckbox(req.body.id, req.body.is_done)
+    .then((response) => {
+      return res.send({
+        success: true,
+        body: response.body,
+      });
+    })
+    .catch((error) => {
+      return res.send({
+        success: false,
+        body: {
+          message: error.message,
+        },
+      });
+    });
+});
+
+// updates the title of a list (protected route)
+app.post('/updateListTitle', isAuth, (req, res) => {
+    updateListTitle(req.body.id, req.body.newTitle).then((response) => {
+        return res.send({
+            success: true,
+            body: response.body
+        });
+    }).catch((error) => {
+        return res.send({
+            success: false,
+            body: {
+                message: error.message
+            }
+        });
+    });
+});
+
 
 // middleware to catch all other undefined routes, sends a 404 not found error and its error page
 app.use((req, res, next) => {
