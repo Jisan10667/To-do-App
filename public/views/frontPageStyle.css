@@ -8,6 +8,7 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: center;
+  overflow: hidden;
 }
 
 /*********** TITLE STYLING *****************/
@@ -15,26 +16,32 @@ body {
 .title {
   text-align: center;
   margin-bottom: 75px;
+  animation: slideIn 1s ease-in-out;
 }
 
 .title h1 {
   font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande",
     "Lucida Sans", Arial, sans-serif;
-  font-size: 70px;
-  margin: 20px;
+  font-size: 80px;
+  margin: 22px;
+  color: white;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .title h6 {
   font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande",
     "Lucida Sans", Arial, sans-serif;
-  font-size: 20px;
-  margin: 30px 20px 40px 20px;
+  font-size: 27px;
+  margin: 32px 22px 40px 22px;
+  color: white;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 /************ ICON STYLING ****************/
 
 .title img {
-  height: 250px;
+  height: 254px;
+  animation: rotate 2.7s infinite linear;
 }
 
 /**************** LOGIN AND REGISTER BUTTONS STYLING ****************/
@@ -43,20 +50,73 @@ body {
   display: flex;
   flex-direction: row;
   justify-content: center;
+  animation: fadeIn 0.8s ease-in-out;
 }
 
 .loginRegister a {
   text-decoration: none;
-  border: 1px solid black;
-  width: 150px;
+  border: 1px solid white;
+  width: 170px;
   text-align: center;
   margin: 0px 15px 0px 15px;
   padding: 10px;
-  color: black;
+  color: white;
   font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande",
     "Lucida Sans", Arial, sans-serif;
+  font-weight: bold;
+  transition: all 0.3s ease;
 }
 
 .loginRegister a:hover {
-  background-color: #eeeeee;
+  background-color: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
+}
+
+/* Animations */
+
+@keyframes slideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes rotate {
+  0% {
+    transform: rotate(0);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes animatedBackground {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+body {
+  animation: animatedBackground 10s ease infinite;
+  background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+  background-size: 400% 400%;
 }

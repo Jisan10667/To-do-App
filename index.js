@@ -1,17 +1,13 @@
-/*************** INITIALIZATION *******************/
-
 // required all necessary dependencies
-
 require("dotenv").config();
 const express = require("express");
 const mysql = require("mysql");
 const session = require("express-session");
 const mySQlStore = require("express-mysql-session")(session);
-var taskController = require("./app/task/taskController");
+const bcrypt = require("bcryptjs");
 const passport = require("passport");
 const LocalStrategy = require("passport-local").Strategy;
 const flash = require("connect-flash");
-const bcrypt = require("bcryptjs");
 
 // initiate Express server and include middleware
 const app = express();
@@ -22,7 +18,7 @@ app.use(
   })
 );
 
-//include middleware for serving static files (css/images folder and error pages folder)
+// include middleware for serving static files (css/images folder and error pages folder)
 app.use(express.static(__dirname + "/public/views"));
 app.use(express.static(__dirname + "/public/error-pages"));
 
@@ -32,14 +28,14 @@ app.set("view engine", "ejs");
 
 // declare connection pool to MySQL database
 var connectionPool = mysql.createPool({
-  //connectionLimit: 300,
+  connectionLimit: 100,
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
 });
 
-//initiailize the sessionStore, which will allow express-mysql-session to store session data into the database
+// initiailize the sessionStore, which will allow express-mysql-session to store session data into the database
 const sessionStore = new mySQlStore(
   {
     createDatabaseTable: false,
@@ -48,6 +44,7 @@ const sessionStore = new mySQlStore(
 );
 
 /******************** FUNCTIONS *********************/
+
 // registers a user in the database and gives them default settings
 function register(username, password, confirmPassword) {
   return new Promise((resolve, reject) => {
@@ -127,6 +124,7 @@ function findUser(username) {
     });
   });
 }
+
 // inserts a user into the database
 function insertUser(username, password) {
   return new Promise((resolve, reject) => {
@@ -168,11 +166,41 @@ function insertUser(username, password) {
 // generates a random salt to hash a user password, returns the salt and the hashed password
 async function genPassword(password) {
   let salt = await bcrypt.genSalt();
-  let hash = await bycrypt.hash(password, salt);
+  let hash = await bcrypt.hash(password, salt);
+
   return {
     salt: salt,
     hash: hash,
   };
+}
+
+// inserts default settings into the database for a new user
+function insertSettings(user_id) {
+  return new Promise((resolve, reject) => {
+    connectionPool.getConnection((err, connection) => {
+      if (err) {
+        connection.release();
+        reject(new Error(err.message));
+      } else {
+        connection.query(
+          `INSERT INTO settings (USER_ID, SHOW_DELETE_LIST_POPUP, FONT_FAMILY, THEME) VALUES (?, 1, "\'Trebuchet MS\'\, \'Lucida Sans Unicode\'\, \'Lucida Grande'\, \'Lucida Sans\'\, Arial\, sans-serif", "Standard")`,
+          [user_id],
+          function (error, results, fields) {
+            if (error) {
+              reject(new Error(error.message));
+            } else {
+              resolve({
+                message: "Setting successfully inserted",
+                setting_id: results.insertId,
+              });
+            }
+
+            connection.release();
+          }
+        );
+      }
+    });
+  });
 }
 
 // verifies the login credentials of a user
@@ -392,6 +420,7 @@ function addList(name, user_id) {
     });
   });
 }
+
 // deletes a list from the database
 function deleteList(list_id) {
   return new Promise((resolve, reject) => {
@@ -453,6 +482,7 @@ function updateToDoCheckbox(todo_id, is_done) {
     });
   });
 }
+
 // updates the title of a list
 function updateListTitle(list_id, newTitle) {
   return new Promise((resolve, reject) => {
@@ -483,6 +513,7 @@ function updateListTitle(list_id, newTitle) {
     });
   });
 }
+
 // retrieves all the settings of a user
 function getUserSettings(user_id) {
   return new Promise((resolve, reject) => {
@@ -499,35 +530,6 @@ function getUserSettings(user_id) {
               reject(new Error(error.message));
             } else {
               resolve(results[0]);
-            }
-
-            connection.release();
-          }
-        );
-      }
-    });
-  });
-}
-
-// inserts default settings into the database for a new user
-function insertSettings(user_id) {
-  return new Promise((resolve, reject) => {
-    connectionPool.getConnection((err, connection) => {
-      if (err) {
-        connection.release();
-        reject(new Error(err.message));
-      } else {
-        connection.query(
-          `INSERT INTO settings (USER_ID, SHOW_DELETE_LIST_POPUP, FONT_FAMILY, THEME) VALUES (?, 1, "\'Trebuchet MS\'\, \'Lucida Sans Unicode\'\, \'Lucida Grande'\, \'Lucida Sans\'\, Arial\, sans-serif", "Standard")`,
-          [user_id],
-          function (error, results, fields) {
-            if (error) {
-              reject(new Error(error.message));
-            } else {
-              resolve({
-                message: "Setting successfully inserted",
-                setting_id: results.insertId,
-              });
             }
 
             connection.release();
@@ -569,62 +571,70 @@ function changeUserDeleteListPopupPreference(user_id, show_popup) {
     });
   });
 }
+
 // updates a user's font setting
 function changeUserFont(user_id, new_font) {
-    return new Promise((resolve, reject) => {
-        connectionPool.getConnection((err, connection) => {
-            if (err) {
-                connection.release();
-                reject(new Error(err.message));
+  return new Promise((resolve, reject) => {
+    connectionPool.getConnection((err, connection) => {
+      if (err) {
+        connection.release();
+        reject(new Error(err.message));
+      } else {
+        connection.query(
+          "UPDATE settings SET FONT_FAMILY=? WHERE USER_ID=?",
+          [new_font, user_id],
+          function (error, results, fields) {
+            if (error) {
+              reject(new Error(error.message));
+            } else {
+              resolve({
+                body: {
+                  message: "Font successfully updated.",
+                  new_font: new_font,
+                },
+              });
             }
-            else {
-                connection.query('UPDATE settings SET FONT_FAMILY=? WHERE USER_ID=?', [new_font, user_id], function(error, results, fields) {
-                    if (error) {
-                        reject(new Error(error.message));
-                    }
-                    else {
-                        resolve({
-                            body: {
-                                message: 'Font successfully updated.',
-                                new_font: new_font
-                            }
-                        });
-                    }
 
-                    connection.release();
-                });
-            }
-        });
+            connection.release();
+          }
+        );
+      }
     });
+  });
 }
+
 // updates a user's theme setting
 function changeUserTheme(user_id, new_theme) {
-    return new Promise((resolve, reject) => {
-        connectionPool.getConnection((err, connection) => {
-            if (err) {
-                connection.release();
-                reject(new Error(err.message));
+  return new Promise((resolve, reject) => {
+    connectionPool.getConnection((err, connection) => {
+      if (err) {
+        connection.release();
+        reject(new Error(err.message));
+      } else {
+        connection.query(
+          "UPDATE settings SET THEME=? WHERE USER_ID=?",
+          [new_theme, user_id],
+          function (error, results, fields) {
+            if (error) {
+              reject(new Error(error.message));
+            } else {
+              resolve({
+                body: {
+                  message: "Theme successfully updated.",
+                  new_theme: new_theme,
+                },
+              });
             }
-            else {
-                connection.query('UPDATE settings SET THEME=? WHERE USER_ID=?', [new_theme, user_id], function(error, results, fields) {
-                    if (error) {
-                        reject(new Error(error.message));
-                    }
-                    else {
-                        resolve({
-                            body: {
-                                message: 'Theme successfully updated.',
-                                new_theme: new_theme
-                            }
-                        });
-                    }
 
-                    connection.release();
-                });
-            }
-        });
+            connection.release();
+          }
+        );
+      }
     });
-}/***************** PASSPORT.JS *************************/
+  });
+}
+
+/***************** PASSPORT.JS *************************/
 
 // use the verifyUser function as a LocalStrategy for Passport.js authentication
 const strategy = new LocalStrategy(verifyUser);
@@ -643,7 +653,9 @@ passport.deserializeUser((user, callback) => {
     return callback(null, user);
   });
 });
+
 /************** MIDDLEWARE *********************/
+
 // stores session data into the database
 app.use(
   session({
@@ -658,10 +670,12 @@ app.use(
     },
   })
 );
+
+// initializes Passport.js
 app.use(passport.initialize());
 // replaces session id in request object with user data pulled from deserialize user
 app.use(passport.session());
-// enable flash message systm
+// enable flash message system
 app.use(flash());
 
 /******************** ROUTES *******************/
@@ -671,10 +685,6 @@ app.get("/", (req, res, next) => {
   res.sendFile(__dirname + "/public/index.html");
 });
 
-// displays register page
-app.get("/register", (req, res, next) => {
-  res.sendFile(__dirname + "/public/register.html");
-});
 // renders login page
 app.get("/login", (req, res, next) => {
   let flashError = req.flash("error");
@@ -683,6 +693,11 @@ app.get("/login", (req, res, next) => {
     flashError: flashError,
     flashMessage: flashMessage,
   });
+});
+
+// displays register page
+app.get("/register", (req, res, next) => {
+  res.sendFile(__dirname + "/public/register.html");
 });
 
 // renders user landing page (protected route)
@@ -733,6 +748,7 @@ app.get("/userSettings", isAuth, (req, res, next) => {
       });
     });
 });
+
 // renders the settings page (protected route)
 app.get("/settings", isAuth, (req, res, next) => {
   getUserSettings(req.user.id)
@@ -751,10 +767,12 @@ app.get("/settings", isAuth, (req, res, next) => {
       });
     });
 });
+
 // renders the explore themes page (protected route)
-app.get('/explore-themes', isAuth, (req, res, next) => {
-    res.render('explore-themes.ejs', {username: req.user.username});
+app.get("/explore-themes", isAuth, (req, res, next) => {
+  res.render("explore-themes.ejs", { username: req.user.username });
 });
+
 // endpoint to login, redirects to /landing on success, else redirects to /login with a flash error message on failure
 app.post(
   "/login",
@@ -764,6 +782,7 @@ app.post(
     successRedirect: "/landing",
   })
 );
+
 // registers a user
 app.post("/register", (req, res) => {
   register(req.body.username, req.body.password, req.body.confirmPassword)
@@ -801,6 +820,7 @@ app.post("/addToDo", isAuth, (req, res) => {
       });
     });
 });
+
 // adds a list to the database (protected route)
 app.post("/addList", isAuth, (req, res) => {
   addList(req.body.name, req.user.id)
@@ -914,36 +934,42 @@ app.post("/changeUserDeleteListPopupPreference", isAuth, (req, res) => {
       });
     });
 });
+
 // changes user's font setting (protected route)
-app.post('/changeFont', isAuth, (req, res) => {
-    changeUserFont(req.user.id, req.body.font_family).then((response) => {
-        return res.send({
-            success: true,
-            body: response.body
-        });
-    }).catch((error) => {
-        return res.send({
-            success: false,
-            body: {
-                message: error.message
-            }
-        });
+app.post("/changeFont", isAuth, (req, res) => {
+  changeUserFont(req.user.id, req.body.font_family)
+    .then((response) => {
+      return res.send({
+        success: true,
+        body: response.body,
+      });
+    })
+    .catch((error) => {
+      return res.send({
+        success: false,
+        body: {
+          message: error.message,
+        },
+      });
     });
 });
+
 // changes user's theme setting (protected route)
-app.post('/changeTheme', isAuth, (req, res) => {
-    changeUserTheme(req.user.id, req.body.theme).then((response) => {
-        return res.send({
-            success: true,
-            body: response.body
-        });
-    }).catch((error) => {
-        return res.send({
-            success: false,
-            body: {
-                message: error.message
-            }
-        });
+app.post("/changeTheme", isAuth, (req, res) => {
+  changeUserTheme(req.user.id, req.body.theme)
+    .then((response) => {
+      return res.send({
+        success: true,
+        body: response.body,
+      });
+    })
+    .catch((error) => {
+      return res.send({
+        success: false,
+        body: {
+          message: error.message,
+        },
+      });
     });
 });
 
@@ -951,5 +977,6 @@ app.post('/changeTheme', isAuth, (req, res) => {
 app.use((req, res, next) => {
   res.status(404).sendFile(__dirname + "/public/error-pages/not-found.html");
 });
+
 // app listens on the port
 app.listen(process.env.PORT);
