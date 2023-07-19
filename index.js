@@ -751,7 +751,10 @@ app.get("/settings", isAuth, (req, res, next) => {
       });
     });
 });
-
+// renders the explore themes page (protected route)
+app.get('/explore-themes', isAuth, (req, res, next) => {
+    res.render('explore-themes.ejs', {username: req.user.username});
+});
 // endpoint to login, redirects to /landing on success, else redirects to /login with a flash error message on failure
 app.post(
   "/login",
@@ -909,6 +912,38 @@ app.post("/changeUserDeleteListPopupPreference", isAuth, (req, res) => {
           message: error.message,
         },
       });
+    });
+});
+// changes user's font setting (protected route)
+app.post('/changeFont', isAuth, (req, res) => {
+    changeUserFont(req.user.id, req.body.font_family).then((response) => {
+        return res.send({
+            success: true,
+            body: response.body
+        });
+    }).catch((error) => {
+        return res.send({
+            success: false,
+            body: {
+                message: error.message
+            }
+        });
+    });
+});
+// changes user's theme setting (protected route)
+app.post('/changeTheme', isAuth, (req, res) => {
+    changeUserTheme(req.user.id, req.body.theme).then((response) => {
+        return res.send({
+            success: true,
+            body: response.body
+        });
+    }).catch((error) => {
+        return res.send({
+            success: false,
+            body: {
+                message: error.message
+            }
+        });
     });
 });
 
