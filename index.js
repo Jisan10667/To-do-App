@@ -475,6 +475,33 @@ function updateListTitle(list_id, newTitle) {
   });
 }
 
+// inserts default settings into the database for a new user
+function insertSettings(user_id) {
+    return new Promise((resolve, reject) => {
+        connectionPool.getConnection((err, connection) => {
+            if (err) {
+                connection.release();
+                reject(new Error(err.message));
+            }
+            else {
+                connection.query(`INSERT INTO settings (USER_ID, SHOW_DELETE_LIST_POPUP, FONT_FAMILY, THEME) VALUES (?, 1, "\'Trebuchet MS\'\, \'Lucida Sans Unicode\'\, \'Lucida Grande'\, \'Lucida Sans\'\, Arial\, sans-serif", "Standard")`, [user_id], function(error, results, fields) {
+                    if (error) {
+                        reject(new Error(error.message));
+                    }
+                    else {
+                        resolve({
+                            message: 'Setting successfully inserted',
+                            setting_id: results.insertId
+                        });
+                    }
+
+                    connection.release();
+                });
+            }
+        });
+    });
+}
+
 
 /***************** PASSPORT.JS *************************/
 
@@ -555,6 +582,31 @@ app.get('/logout', (req, res, next) => {
         }
         req.flash('message', 'You are now logged out.');
         res.redirect('/login');
+    });
+});
+
+// returns all settings of a user (protected route)
+app.get('/userSettings', isAuth, (req, res, next) => {
+    getUserSettings(req.user.id).then((response) => {
+        return res.send({
+            success: true,
+            body: response
+        });
+    }).catch((error) => {
+        return res.send({
+            success: false,
+            body: {
+                message: error.message
+            }
+        });
+    });
+});
+// renders the settings page (protected route)
+app.get('/settings', isAuth, (req, res, next) => {
+    getUserSettings(req.user.id).then((response) => {
+        res.render('settings.ejs', {settings: response, flashError: [], username: req.user.username});
+    }).catch((error) => {
+        res.render('settings.ejs', {settings: [], flashError: [error.message], username: req.user.username});
     });
 });
 
