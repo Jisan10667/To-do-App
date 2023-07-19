@@ -232,6 +232,250 @@ function isAuth(req, res, next) {
   }
 }
 
+// parses the string of user To-Dos into an array of JSON objects 
+function parseUserToDos(results, delimInner, delimOuter) {
+    return new Promise((resolve, reject) => {
+        let parsedToDos = [];
+        try {
+            for (let i = 0; i < results.length; i++) {
+                parsedToDos[i] = {};
+                parsedToDos[i].ID = results[i].ID;
+                parsedToDos[i].USER_ID = results[i].USER_ID;
+                parsedToDos[i].NAME = results[i].NAME;
+
+                if (results[i].listToDos) { // truthy statement
+                    parsedToDos[i].listToDos = results[i].listToDos.split(delimOuter);
+                    
+                    for (let k = 0; k < parsedToDos[i].listToDos.length; k++) {
+                        let listComponents = parsedToDos[i].listToDos[k].split(delimInner);
+                        parsedToDos[i].listToDos[k] = {
+                            'todo_id': listComponents[0],
+                            'task': listComponents[1],
+                            'is_done': listComponents[2]
+                        };
+                    }
+                    
+                }
+                else {
+                    parsedToDos[i].listToDos = [];
+                }
+            }
+            resolve(parsedToDos);
+        }
+        catch(error) {
+            reject(new Error(error.message));
+        }
+    });
+    
+}
+
+// retrieves all the To-Dos of a user
+function getUserToDos(user_id, delimInner, delimOuter) {
+    return new Promise((resolve, reject) => {
+        connectionPool.getConnection((err, connection) => {
+            if (err) {
+                connection.release();
+                reject(new Error(err.message));
+            }
+            else {
+                connection.query(`SELECT lists.ID, lists.USER_ID, lists.NAME, GROUP_CONCAT(CONCAT(todos.ID, '${delimInner}', todos.TASK, '${delimInner}', todos.IS_DONE) SEPARATOR '${delimOuter}')
+                AS listToDos FROM lists LEFT JOIN todos ON lists.ID = todos.LIST_ID WHERE USER_ID=? GROUP BY lists.ID`, 
+                [user_id], function(error, results, fields) {
+                    if (error) {
+                        reject(new Error(error.message));
+                    }
+                    else {
+                        parseUserToDos(results, delimInner, delimOuter).then((response) => {
+                            resolve(response);
+                        }).catch((error) => {
+                            reject(new Error(error.message));
+                        });
+                    }
+
+                    connection.release();
+                });
+            }
+        });
+    });
+}
+
+// inserts a new To-Do into the database
+function addToDo(task, list_id) {
+    return new Promise((resolve, reject) => {
+        connectionPool.getConnection((err, connection) => {
+            if (err) {
+                connection.release();
+                reject(new Error(err.message));
+            }
+            else {
+                connection.query('INSERT INTO todos (TASK, IS_DONE, LIST_ID) VALUES (?, 0, ?)', [task, list_id], function(error, results, fields) {
+                    if (error) {
+                        reject(new Error(error.message));
+                    }
+                    else {
+                        resolve({
+                            body: {
+                                message: 'To Do inserted successfully.',
+                                task: task,
+                                id: results.insertId
+                            }
+                        })
+                    }
+
+                    connection.release();
+                });
+            }
+        });
+    });
+}
+
+// removes a To-Do from the database
+function removeToDo(todo_id) {
+    return new Promise((resolve, reject) => {
+        connectionPool.getConnection((err, connection) => {
+            if (err) {
+                connection.release();
+                reject(new Error(err.message));
+            }
+            else {
+                connection.query('DELETE FROM todos WHERE ID=?', [todo_id], function(error, results, fields) {
+                    if (error) {
+                        reject(new Error(error.message));
+                    }
+                    else {
+                        resolve({
+                            body: {
+                                message: 'ToDo successfully deleted',
+                                id: todo_id
+                            }
+                        })
+                    }
+
+                    connection.release();
+                });
+            }
+        });
+    });
+}
+
+// inserts a new list into the database
+function addList(name, user_id) {
+    return new Promise((resolve, reject) => {
+        connectionPool.getConnection((err, connection) => {
+            if (err) {
+                connection.release();
+                reject(new Error(err.message));
+            }
+            else {
+                connection.query('INSERT INTO lists (NAME, USER_ID) VALUES (?, ?)', [name, user_id], function(error, results, fields) {
+                    if (error) {
+                        reject(new Error(error.message));
+                    }
+                    else {
+                        resolve({
+                            body: {
+                                message: 'List sucessfully inserted.',
+                                id: results.insertId
+                            }
+                        });
+                    }
+
+                    connection.release();
+                });
+            }
+        });
+    });
+}
+// deletes a list from the database
+function deleteList(list_id) {
+    return new Promise((resolve, reject) => {
+        connectionPool.getConnection((err, connection) => {
+            if (err) {
+                connection.release();
+                reject(new Error(err.message));
+            }
+            else {
+                connection.query('DELETE FROM lists WHERE ID=?', [list_id], function(error, results, fields) {
+                    if (error) {
+                        reject(new Error(error.message));
+                    }
+                    else {
+                        resolve({
+                            body: {
+                                message: 'List successfully deleted.',
+                                id: list_id
+                            }
+                        })
+                    }
+        
+                    connection.release();
+                });
+            }
+        });
+    });
+}
+
+// updates the status of a To-Do checkbox (done or not?)
+function updateToDoCheckbox(todo_id, is_done) {
+    return new Promise((resolve, reject) => {
+        connectionPool.getConnection((err, connection) => {
+            if (err) {
+                connection.release();
+                reject(new Error(err.message));
+            }
+            else {
+                connection.query('UPDATE todos SET IS_DONE=? WHERE ID=?', [is_done, todo_id], function(error, results, fields) {
+                    if (error) {
+                        reject(new Error(error.message));
+                    }
+                    else {
+                        resolve({
+                            body: {
+                                message: "ToDo checkbox successfully updated.",
+                                id: todo_id
+                            }
+                        });
+                    }
+
+                    connection.release();
+                });
+            }
+        });
+        
+    });
+}
+
+function updateListTitle(list_id, newTitle) {
+  return new Promise((resolve, reject) => {
+    connectionPool.getConnection((err, connection) => {
+      if (err) {
+        connection.release();
+        reject(new Error(err.message));
+      } else {
+        connection.query(
+          "UPDATE lists SET NAME=? WHERE ID=?",
+          [newTitle, list_id],
+          function (error, results, fields) {
+            if (error) {
+              reject(new Error(error.message));
+            } else {
+              resolve({
+                body: {
+                  message: "List title successfully updated.",
+                  id: list_id,
+                },
+              });
+            }
+
+            connection.release();
+          }
+        );
+      }
+    });
+  });
+}
+
+
 /***************** PASSPORT.JS *************************/
 
 // use the verifyUser function as a LocalStrategy for Passport.js authentication
@@ -287,11 +531,94 @@ app.get("/register", (req, res, next) => {
 app.get("/login", (req, res, next) => {
   let flashError = req.flash("error");
   let flashMessage = req.flash("message");
-  res.render("public/login.ejs", {
+  res.render("login.ejs", {
     flashError: flashError,
     flashMessage: flashMessage,
   });
 });
+
+
+// renders user landing page (protected route)
+app.get('/landing', isAuth, (req, res, next) => {
+    getUserToDos(req.user.id, '␜', '␝').then((response) => {
+        return res.render('landing.ejs', {flashError: [], userToDos: response, username: req.user.username});
+    }).catch((error) => {
+        return res.render('landing.ejs', {flashError: [error.message], userToDos: [], username: req.user.username});
+    });
+});
+
+// signs out the user, removes session and user data from request object
+app.get('/logout', (req, res, next) => {
+    req.logout((err) => {
+        if (err) {
+            next(err);
+        }
+        req.flash('message', 'You are now logged out.');
+        res.redirect('/login');
+    });
+});
+
+// endpoint to login, redirects to /landing on success, else redirects to /login with a flash error message on failure
+app.post(
+  "/login",
+  passport.authenticate("local", {
+    failureRedirect: "/login",
+    failureFlash: true,
+    successRedirect: "/landing",
+  })
+);
+// registers a user
+app.post("/register", (req, res) => {
+  register(req.body.username, req.body.password, req.body.confirmPassword)
+    .then((response) => {
+      return res.send({
+        success: true,
+        body: response.body,
+      });
+    })
+    .catch((error) => {
+      return res.send({
+        success: false,
+        body: {
+          message: error.message,
+        },
+      });
+    });
+});
+
+// adds a To-Do to the database (protected route)
+app.post('/addToDo', isAuth, (req, res) => {
+    addToDo(req.body.task, req.body.list_id).then((response) => {
+        return res.send({
+            success: true,
+            body: response.body
+        })
+    }).catch((error) => {
+        return res.send({
+            success: false,
+            body: {
+                message: error.message
+            }
+        })
+    });
+});
+// adds a list to the database (protected route)
+app.post('/addList', isAuth, (req, res) => {
+    addList(req.body.name, req.user.id).then((response) => {
+        return res.send({
+            success: true,
+            body: response.body
+        });
+    }).catch((error) => {
+        return res.send({
+            success: false,
+            body: {
+                message: error.message
+            }
+        });
+    });
+});
+
 
 // middleware to catch all other undefined routes, sends a 404 not found error and its error page
 app.use((req, res, next) => {

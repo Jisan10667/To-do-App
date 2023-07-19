@@ -15,7 +15,7 @@
                 <div class="loginBox">
                     <h1>Login</h1>
                     <!-- Form for entering loginn credentials -->
-                    <form action="/login" method="POST" id="loginForm">
+                    <form action="/public/login.ejs" method="POST" id="loginForm">
                         <input type="text" name="username" placeholder="Username" required><br>
                         <div class="passwordContainer">
                             <input type="password" name="password" placeholder="Password" autocomplete="current-password" id="current-password" required><br>
@@ -24,7 +24,7 @@
                         <input type="submit" name="Login" value="Log In" id="loginBtn">
                     </form>
                     <!-- link to register page if the user does not yet have an account -->
-                    <a href="/register">New User?</a>
+                    <a href="/public/register.html">New User?</a>
                 </div>
             </div>
         </div>
