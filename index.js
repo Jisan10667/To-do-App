@@ -671,6 +671,40 @@ app.post('/addList', isAuth, (req, res) => {
     });
 });
 
+// deletes a list from the database (protected route)
+app.post('/deleteList', isAuth, (req, res) => {
+    deleteList(req.body.id).then((response) => {
+        return res.send({
+            success: true,
+            body: response.body
+        });
+    }).catch((error) => {
+        return res.send({
+            success: false,
+            body: {
+                message: error.message
+            }
+        });
+    });
+});
+
+// removes a To-Do from the database (protected route)
+app.post('/removeToDo', isAuth, (req, res) => {
+    removeToDo(req.body.id).then((response) => {
+        return res.send({
+            success: true,
+            body: response.body
+        });
+    }).catch((error) => {
+        return res.send({
+            success: false,
+            body: {
+                message: error.message
+            }
+        });
+    });
+});
+
 
 // middleware to catch all other undefined routes, sends a 404 not found error and its error page
 app.use((req, res, next) => {
