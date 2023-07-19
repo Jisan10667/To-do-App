@@ -569,8 +569,62 @@ function changeUserDeleteListPopupPreference(user_id, show_popup) {
     });
   });
 }
+// updates a user's font setting
+function changeUserFont(user_id, new_font) {
+    return new Promise((resolve, reject) => {
+        connectionPool.getConnection((err, connection) => {
+            if (err) {
+                connection.release();
+                reject(new Error(err.message));
+            }
+            else {
+                connection.query('UPDATE settings SET FONT_FAMILY=? WHERE USER_ID=?', [new_font, user_id], function(error, results, fields) {
+                    if (error) {
+                        reject(new Error(error.message));
+                    }
+                    else {
+                        resolve({
+                            body: {
+                                message: 'Font successfully updated.',
+                                new_font: new_font
+                            }
+                        });
+                    }
 
-/***************** PASSPORT.JS *************************/
+                    connection.release();
+                });
+            }
+        });
+    });
+}
+// updates a user's theme setting
+function changeUserTheme(user_id, new_theme) {
+    return new Promise((resolve, reject) => {
+        connectionPool.getConnection((err, connection) => {
+            if (err) {
+                connection.release();
+                reject(new Error(err.message));
+            }
+            else {
+                connection.query('UPDATE settings SET THEME=? WHERE USER_ID=?', [new_theme, user_id], function(error, results, fields) {
+                    if (error) {
+                        reject(new Error(error.message));
+                    }
+                    else {
+                        resolve({
+                            body: {
+                                message: 'Theme successfully updated.',
+                                new_theme: new_theme
+                            }
+                        });
+                    }
+
+                    connection.release();
+                });
+            }
+        });
+    });
+}/***************** PASSPORT.JS *************************/
 
 // use the verifyUser function as a LocalStrategy for Passport.js authentication
 const strategy = new LocalStrategy(verifyUser);
