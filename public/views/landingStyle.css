@@ -1,7 +1,8 @@
 html {
   height: 100%;
-  font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande",
-    "Lucida Sans", Arial, sans-serif;
+  /* font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande",
+    "Lucida Sans", Arial, sans-serif; */
+  font-family: "Arial Black", sans-serif;
 }
 
 * {
@@ -14,7 +15,7 @@ body {
   position: relative;
   width: 100%;
   background: var(--background-color);
-  
+
   animation: fadeInOut 2s ease-in-out;
 }
 
@@ -221,24 +222,27 @@ body {
 #addList,
 #logoutBtn,
 .deleteListPopup input {
-  border: 1px solid var(--text-color);
-  background-color: var(--background-color);
-  width: 150px;
-  padding: 10px;
-  font-size: 15px;
+  border: none;
+  background-color: var(--accent-button-color-1);
+  width: 180px;
+  padding: 15px;
+  font-size: 18px;
   box-sizing: border-box;
   text-decoration: none;
   text-align: center;
-  color: black;
+  color: white;
   margin: 10px;
-  color: var(--text-color);
+  border-radius: 10px;
+  transition: background-color 0.3s ease;
 }
 
 #addList:hover,
 #logoutBtn:hover,
 .deleteListPopup input:hover {
-  background-color: var(--hover-color);
+  background-color: var(--accent-button-color-1-hover);
   cursor: pointer;
+  transform: scale(1.1);
+  box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.1);
 }
 
 /***************** TO-DO LIST STYLING **************/
@@ -522,4 +526,5 @@ body {
 
 .dropdownList a:hover {
   background-color: var(--hover-color);
+  transform: scale(1.05);
 }
