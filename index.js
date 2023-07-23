@@ -10,7 +10,9 @@ const LocalStrategy = require("passport-local").Strategy;
 const flash = require("connect-flash");
 const jwt = require("jsonwebtoken");
 const passportJWT = require("passport-jwt");
+const serverless = require("serverless-http");
 
+const router = express.Router();
 // initiate Express server and include middleware
 const app = express();
 app.use(express.json());
@@ -792,7 +794,6 @@ app.post(
   })
 );
 
-
 // registers a user
 app.post("/register", (req, res) => {
   register(req.body.username, req.body.password, req.body.confirmPassword)
@@ -987,6 +988,9 @@ app.post("/changeTheme", isAuth, (req, res) => {
 app.use((req, res, next) => {
   res.status(404).sendFile(__dirname + "/public/error-pages/not-found.html");
 });
+
+app.use("/netlify.toml/functions/api", router);
+module.exports.handler = serverless(app);
 
 // app listens on the port
 app.listen(process.env.PORT);
