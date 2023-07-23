@@ -8,6 +8,8 @@ const bcrypt = require("bcryptjs");
 const passport = require("passport");
 const LocalStrategy = require("passport-local").Strategy;
 const flash = require("connect-flash");
+const jwt = require("jsonwebtoken");
+const passportJWT = require("passport-jwt");
 
 // initiate Express server and include middleware
 const app = express();
@@ -634,11 +636,18 @@ function changeUserTheme(user_id, new_theme) {
   });
 }
 
-/***************** PASSPORT.JS *************************/
+/***************** PASSPORT.JS and WebToken *************************/
 
 // use the verifyUser function as a LocalStrategy for Passport.js authentication
 const strategy = new LocalStrategy(verifyUser);
 passport.use(strategy);
+const ExtractJwt = passportJWT.ExtractJwt;
+const JwtStrategy = passportJWT.Strategy;
+
+const jwtOptions = {
+  jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+  secretOrKey: "process.env.SECRET_KEY", // Replace with your own secret key
+};
 
 // serialize user into browser's session
 passport.serializeUser((user, callback) => {
@@ -782,6 +791,7 @@ app.post(
     successRedirect: "/landing",
   })
 );
+
 
 // registers a user
 app.post("/register", (req, res) => {
