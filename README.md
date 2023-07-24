@@ -45,7 +45,7 @@ By clicking this, you can enjoy all over the app-view through screenshots.
 
 ## Authors
 
--<img src="https://github.com/Jisan10667/SWE-project-250/blob/main/Image/1678814908588.jpg" width="350" height="350" />
+
 
 -[@Jisan Ahmed](https://github.com/Jisan10667)
 REG NO: 2019831040
