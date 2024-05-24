@@ -30,17 +30,14 @@ It's a basic To-Do list app.
 
 
 
-## Basic video-tutorial : 
 
-
-[Watch and enjoy !](https://github.com/Jisan10667/To-do-App/tree/Making-Readme/Screenshots)
 
 
 
 ## Screenshots
 
 By clicking this, you can enjoy all over the app-view through screenshots.
-[App Screenshot](https://github.com/Jisan10667/SWE-project-250/tree/main/Screenshots)  
+[App Screenshot](https://github.com/Jisan10667/To-do-App/tree/main/Screenshots)  
 
 
 ## Authors
